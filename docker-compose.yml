@@ -1,0 +1,33 @@
+version: '3.7'
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
+        image: 'topgamers'
+        ports:
+            - 8091:80
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - default
+
+    db:
+        image: mysql:5.7
+        container_name: db-gamers
+        restart: always
+        ports:
+            - "3307:3306"
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+
+        volumes:
+            - ./docker/dump:/docker-entrypoint-initdb.d
+        networks:
+            - default
+
+volumes:
+    persistent:
