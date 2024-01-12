@@ -35,23 +35,34 @@ class GameController extends Controller
             ->selectRaw('member_id, MIN(milliseconds) as milliseconds');
 
         if (array_key_exists('email', $input)) {
-            $member = Member::where('email', $input['email'])->first();
-            if ($member) {
-                $selfResult = $member->results()->orderBy('milliseconds')->first();
-            }
+            $query->whereHas('member', function ($query) use ($input) {
+                $query->where('email', $input['email']);
+            });
         }
 
         $topResults = $query->orderBy('milliseconds')->take(10)->get();
+        $sortedResults = $topResults->sortBy('milliseconds');
 
-        $formattedTopResults = $topResults->map(function ($result, $index) {
-            return [
-                'email' => $result->member->hidden_email,
-                'place' => $index + 1,
-                'milliseconds' => $result->milliseconds,
-            ];
+        $sortedResults->each(function ($result, $index) {
+            $result->place = $index + 1;
         });
 
-        $formattedSelfResult = isset($selfResult) ? new GameResource($selfResult, 10, true) : null;
+        $selfResult = null;
+
+        if (array_key_exists('email', $input)) {
+            $member = Member::where('email', $input['email'])->first();
+
+            if ($member) {
+                $selfResult = $member->results()->orderBy('milliseconds')->first();
+                $selfResult->place = $sortedResults->search(function ($item) use ($selfResult) {
+                        return $item->id === $selfResult->id;
+                    }) + 1;
+            }
+        }
+
+        $formattedTopResults = GameResource::collection($sortedResults);
+
+        $formattedSelfResult = $selfResult ? new GameResource($selfResult) : null;
 
         return response()->json([
             'data' => [
