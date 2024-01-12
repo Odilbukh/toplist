@@ -7,14 +7,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class GameResource extends JsonResource
 {
-
-//    private int $index;
     private bool $isSelf;
 
     public function __construct($resource,  bool $isSelf = false)
     {
         parent::__construct($resource);
-//        $this->index = $index;
         $this->isSelf = $isSelf;
     }
 
