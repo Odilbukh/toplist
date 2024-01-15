@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 
 class GameController extends Controller
 {
-    final public function saveResult(SaveResultRequest $request): void
+    final public function saveResult(SaveResultRequest $request): JsonResponse
     {
         $input = $request->validated();
 
@@ -19,10 +19,16 @@ class GameController extends Controller
             $member = Member::where('email', $input['email'])->first();
         }
 
-        Result::create([
+        $result = Result::create([
             'member_id' => $member ? $member->id : null,
             'milliseconds' => $input['milliseconds'],
         ]);
+
+        if ($result) {
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false]);
     }
 
     final public function getTopResults(GetTopResultRequest $request): JsonResponse
